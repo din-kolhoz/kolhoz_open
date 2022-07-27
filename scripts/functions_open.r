@@ -95,3 +95,67 @@ ORDER BY [code_1c_shop], [department_name], [ds]")
   
   return(df_sheck)
 }
+
+get_ipc_sql <- function(con_analytics, ipc_type = 'food', prediciton = FALSE) {
+  
+  request_code <- paste0("SELECT [date]
+,[ipc]
+FROM [analytics].[dbo].[ipc]
+WHERE ([type] = 'Repl_ipc_type') AND ([prediction] = Repl_prediction)")
+  
+  # date
+  request_code <- gsub("Repl_ipc_type", ipc_type, request_code)
+  request_code <- gsub("Repl_prediction", as.integer(prediciton), request_code)
+  
+  
+  df_ipc <- dbGetQuery(con_analytics, request_code)
+  df_ipc$date <- as.Date(df_ipc$date)
+  df_ipc <- df_ipc %>%
+    mutate(n_year  = year(date),
+           n_month = month(date)) %>%
+    arrange(desc(date)) %>%
+    dplyr::select(-date)
+  
+  df_ipc$ipc_today <- 1
+  for(i in 2:nrow(df_ipc)) {
+    df_ipc[i,'ipc_today'] <- df_ipc[i-1,'ipc_today']*df_ipc[i-1,'ipc']
+  }
+  df_ipc
+  
+  return(df_ipc)
+}
+
+get_weather_sql <- function(con_analytics) {
+  
+  request_code <- paste0("SELECT [date]
+      ,[temp]
+      ,[prediction]
+      ,[pred_date]
+      ,[pred_name]
+  FROM [analytics].[dbo].[weather]")
+  
+  
+  df_weather <- dbGetQuery(con_analytics, request_code)
+  df_weather$date <- as.Date(df_weather$date)
+  df_weather <- df_weather %>%
+    mutate(n_year  = year(date),
+           n_month = month(date)) %>%
+    arrange(desc(date))
+  
+  df_weather_fact <- df_weather %>%
+    filter(prediction == 0)
+  max_date_fact <- max(df_weather_fact$date)
+  
+  df_weather_pred <- df_weather %>%
+    filter(prediction == 1) %>%
+    filter(date > max_date_fact)
+  
+  max_pred_date <- max(df_weather_pred$pred_date)
+  df_weather_pred <- df_weather_pred %>%
+    filter(pred_date == max_pred_date)
+  
+  df_weather_final <- rbind(df_weather_fact,df_weather_pred)
+  
+  return(df_weather_final %>%
+           dplyr::select(date, temp))
+}
