@@ -159,3 +159,85 @@ get_weather_sql <- function(con_analytics) {
   return(df_weather_final %>%
            dplyr::select(date, temp))
 }
+
+get_n_weeks_sql <- function(con_analytics) {
+  
+  request_code <- paste0("SELECT [date]
+      ,[n_week]
+	  ,MONTH([date]) as n_month
+,YEAR([date]) as n_year
+  FROM [analytics].[dbo].[n_weeks]")
+  
+  
+  df_n_weeks_sgl      <- dbGetQuery(con_analytics, request_code)
+  df_n_weeks_sgl$date <- as.Date(df_n_weeks_sgl$date)
+  
+  return(df_n_weeks_sgl)
+}
+
+get_disasters_sql <- function(con_analytics) {
+  
+  request_code <- paste0("SELECT [date]
+      ,[impact_value]
+      ,[disaster_name]
+  FROM [analytics].[dbo].[disasters]")
+  
+  
+  df_disasters_sql      <- dbGetQuery(con_analytics, request_code)
+  df_disasters_sql$date <- as.Date(df_disasters_sql$date)
+  
+  return(df_disasters_sql)
+}
+
+get_hdays_sql <- function(con_analytics) {
+  
+  request_code <- paste0("SELECT [holiday]
+	  ,[date] as ds
+      ,[lower_window]
+      ,[upper_window]
+  FROM [analytics].[dbo].[hdays]")
+  
+  
+  df_hdays_sql    <- dbGetQuery(con_analytics, request_code)
+  df_hdays_sql$ds <- as.Date(df_hdays_sql$ds)
+  
+  return(df_hdays_sql)
+}
+
+get_plans_sql <- function(con_analytics,
+                          i_pred_date = '2022-06-24',
+                          i_pred_name = 'prophet') {
+  
+  request_code <- paste0("SELECT [date]
+      ,[shop_code]
+      ,[dept_code]
+      ,[pred_date]
+      ,[pred_name]
+      ,[pred_value]
+      ,[pred_value_low]
+      ,[pred_value_high]
+  FROM [analytics].[dbo].[pred_dept]
+  WHERE [pred_date] = 'Repl_pred_date' AND [pred_name] = 'Repl_pred_name'")
+  
+  request_code <- gsub("Repl_pred_date", i_pred_date, request_code)
+  request_code <- gsub("Repl_pred_name", i_pred_name, request_code)
+  
+  df_pred           <- dbGetQuery(con_dalion_en,request_code)
+  df_pred$date      <- as.Date(df_pred$date)
+  df_pred$pred_date <- as.Date(df_pred$pred_date)
+  
+  return(df_pred)
+}
+
+get_unique_plans_list_sql <- function(con_analytics) {
+  
+  request_code <- paste0("SELECT [pred_name]
+,[pred_date]
+FROM [analytics].[dbo].[pred_dept]
+GROUP BY [pred_name],[pred_date]")
+  
+  df_pred_list <- dbGetQuery(con_dalion_en,request_code)
+  df_pred_list$pred_date <- as.Date(df_pred_list$pred_date)
+  
+  return(df_pred_list)
+}
