@@ -237,6 +237,7 @@ FROM [analytics].[dbo].[pred_dept]
 GROUP BY [pred_name],[pred_date]")
   
   df_pred_list <- dbGetQuery(con_dalion_en,request_code)
+  df_pred_list$pred_date <- as.character(df_pred_list$pred_date)
   
   return(df_pred_list)
 }
