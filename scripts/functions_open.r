@@ -164,8 +164,8 @@ get_n_weeks_sql <- function(con_analytics) {
   
   request_code <- paste0("SELECT [date]
       ,[n_week]
-	  ,MONTH([date]) as n_month
-,YEAR([date]) as n_year
+      ,[n_month]
+      ,[n_year]
   FROM [analytics].[dbo].[n_weeks]")
   
   
