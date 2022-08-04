@@ -88,8 +88,8 @@ ORDER BY [code_1c_shop], [department_name], [ds]")
                            code_1c_shop == '00035' ~ 'Парашютная63',
                            code_1c_shop == '00040' ~ 'Графская15'), .after = code_1c_shop) %>%
     arrange(code_1c_shop,dep_name,ds) %>%
-    mutate(n_month = month(ds),
-           n_year  = year(ds),
+    mutate(#n_month = month(ds),
+           #n_year  = year(ds),
            margine = sales - prime,
            margine_pers = round(100*margine/prime,2))
   
