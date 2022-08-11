@@ -120,7 +120,8 @@ WHERE ([type] = 'Repl_ipc_type') AND ([prediction] = Repl_prediction)")
   for(i in 2:nrow(df_ipc)) {
     df_ipc[i,'ipc_today'] <- df_ipc[i-1,'ipc_today']*df_ipc[i-1,'ipc']
   }
-  df_ipc
+  
+  colnames(df_ipc) <- c('k_ipc','n_year','n_month','ipc_today')
   
   return(df_ipc)
 }
