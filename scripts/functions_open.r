@@ -360,9 +360,9 @@ ORDER BY [code_1c_shop], [department_name], [sales] DESC, [date]")
   request_code <- gsub("Repl_end_date",   end_date,   request_code)
 
   df_sheck <- dbGetQuery(con_dalion_en,request_code)
-  df_sheck$ds <- as.Date(df_sheck$ds)
   
   df_sheck <- df_sheck %>%
+    mutate(date = as.Date(date)) %>%
     mutate(dep_id = case_when(department_name == 'Мясной' ~ 'СМ',
                               department_name == 'Колбасный' ~ 'БЛ',
                               department_name == 'Кондитерский' ~ 'НК',
