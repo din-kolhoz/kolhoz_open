@@ -242,3 +242,133 @@ GROUP BY [pred_name],[pred_date]")
   
   return(df_pred_list)
 }
+
+
+get_df_check_structure <- function(start_date = '2022-06-01',
+                                   end_date   = '2022-06-01',
+                                   con_dalion_en) {
+  
+  request_code <- paste0("SELECT 
+
+[df_sales].[code_1c_shop],
+[df_sales].[code_1c_nomenclature],
+[df_nomenclature].[nomenclature_name],
+[df_sales].[department_name],
+[df_sales].[date],
+[df_sales].[sales],
+[df_sales].[prime],
+[df_sales].[number],
+[df_sales].[n_sales],
+[df_sales].[sales_dept],
+[df_sales].[n_checks],
+[df_sales].[value_1000_checks],
+[df_sales].[n_sales_1000_checks],
+[df_sales].[value_100_tr],
+[df_sales].[n_sales_100_tr],
+[df_sales].[marg],
+[df_nomenclature].[measurement_unit],
+[df_nomenclature].[category_1],
+[df_nomenclature].[category_2],
+[df_nomenclature].[category_3],
+[df_nomenclature].[category_4],
+[df_nomenclature].[category_5],
+[df_nomenclature].[supplier_name]
+
+FROM(
+SELECT 
+[df_sales_nom].[code_1c_shop],
+[df_sales_nom].[code_1c_nomenclature],
+[df_sales_nom].[department_name],
+[df_sales_nom].[date],
+[df_sales_nom].[sales],
+[df_sales_nom].[prime],
+[df_sales_nom].[number],
+[df_sales_nom].[n_sales],
+[df_sales_dept].[sales_dept],
+[df_sales_dept].[n_checks],
+(CASE
+     WHEN [df_sales_dept].[n_checks] <> 0 THEN ([df_sales_nom].[number]  / [df_sales_dept].[n_checks] * 1000)
+	 ELSE NULL
+	 END) AS value_1000_checks,
+(CASE
+     WHEN [df_sales_dept].[n_checks] <> 0 THEN (([df_sales_nom].[n_sales] + 0.0) / [df_sales_dept].[n_checks] * 1000)
+	 ELSE NULL
+	 END) AS n_sales_1000_checks,
+(CASE
+     WHEN [df_sales_dept].[sales_dept] <> 0 THEN ([df_sales_nom].[number]  / [df_sales_dept].[sales_dept] * 100000)
+	 ELSE NULL
+	 END) AS value_100_tr,
+(CASE
+     WHEN [df_sales_dept].[sales_dept] <> 0 THEN (([df_sales_nom].[n_sales] + 0.0) / [df_sales_dept].[sales_dept] * 100000)
+	 ELSE NULL
+	 END) AS n_sales_100_tr,
+(CASE
+     WHEN [df_sales_nom].[prime] <> 0 THEN ([df_sales_nom].[sales]    / [df_sales_nom].[prime])
+	 ELSE NULL
+	 END) AS marg
+
+FROM(
+SELECT [code_1c_shop],
+[code_1c_nomenclature],
+[department_name],
+[date],
+ROUND(SUM([sales_amount_fact]),2) AS sales,
+ROUND(SUM([prime_cost]),2) AS prime,
+ROUND(SUM([number_sales_fact]),2) AS number,
+COUNT(distinct [guid_check]) AS n_sales
+
+FROM [dalion_en].[dbo].[sales]
+
+WHERE (([date] BETWEEN 'Repl_start_date' AND 'Repl_end_date'))
+
+GROUP BY [date], [code_1c_shop], [department_name], [code_1c_nomenclature]
+
+) AS df_sales_nom
+
+LEFT JOIN (
+SELECT 
+[code_1c_shop],
+[department_name],
+[date],
+ROUND(SUM([sales_amount_fact]),2) AS sales_dept,
+COUNT(distinct [guid_check]) AS n_checks
+
+FROM [dalion_en].[dbo].[sales]
+
+GROUP BY [date], [code_1c_shop], [department_name]
+) AS df_sales_dept
+
+ON (
+[df_sales_nom].[date]                 = [df_sales_dept].[date] AND
+[df_sales_nom].[code_1c_shop]         = [df_sales_dept].[code_1c_shop] AND
+[df_sales_nom].[department_name]      = [df_sales_dept].[department_name]
+)
+) AS df_sales
+
+LEFT JOIN (
+SELECT *
+FROM [dalion_en].[dbo].[nomenclature]
+) AS df_nomenclature
+
+ON [df_sales].[code_1c_nomenclature] = [df_nomenclature].[code_1c_nomenclature]
+
+
+ORDER BY [code_1c_shop], [department_name], [sales] DESC, [date]")
+  
+  # date
+  request_code <- gsub("Repl_start_date", start_date, request_code)
+  request_code <- gsub("Repl_end_date",   end_date,   request_code)
+
+  df_sheck <- dbGetQuery(con_dalion_en,request_code)
+  df_sheck$ds <- as.Date(df_sheck$ds)
+  
+  df_sheck <- df_sheck %>%
+    mutate(dep_id = case_when(department_name == 'Мясной' ~ 'СМ',
+                              department_name == 'Колбасный' ~ 'БЛ',
+                              department_name == 'Кондитерский' ~ 'НК',
+                              department_name == 'Молочный' ~ 'ЛМ',
+                              department_name == 'Рыбный' ~ 'БР',
+                              department_name == 'Кулинария' ~ 'ЛК'), .after = code_1c_shop)
+  
+  return(df_sheck)
+}
