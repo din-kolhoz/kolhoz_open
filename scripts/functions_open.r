@@ -223,7 +223,7 @@ get_plans_sql <- function(con_analytics,
   request_code <- gsub("Repl_pred_date", i_pred_date, request_code)
   request_code <- gsub("Repl_pred_name", i_pred_name, request_code)
   
-  df_pred           <- dbGetQuery(con_dalion_en,request_code)
+  df_pred           <- dbGetQuery(con_analytics,request_code)
   df_pred$date      <- as.Date(df_pred$date)
   df_pred$pred_date <- as.Date(df_pred$pred_date)
   
