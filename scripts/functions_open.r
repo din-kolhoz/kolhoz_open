@@ -237,7 +237,7 @@ get_unique_plans_list_sql <- function(con_analytics) {
 FROM [analytics].[dbo].[pred_dept]
 GROUP BY [pred_name],[pred_date]")
   
-  df_pred_list <- dbGetQuery(con_dalion_en,request_code)
+  df_pred_list <- dbGetQuery(con_analytics,request_code)
   df_pred_list$pred_date <- as.character(df_pred_list$pred_date)
   
   return(df_pred_list)
@@ -360,15 +360,6 @@ ORDER BY [code_1c_shop], [department_name], [sales] DESC, [date]")
   request_code <- gsub("Repl_end_date",   end_date,   request_code)
 
   df_sheck <- dbGetQuery(con_dalion_en,request_code)
-  
-  df_sheck <- df_sheck %>%
-    mutate(date = as.Date(date)) %>%
-    mutate(dep_id = case_when(department_name == 'Мясной' ~ 'СМ',
-                              department_name == 'Колбасный' ~ 'БЛ',
-                              department_name == 'Кондитерский' ~ 'НК',
-                              department_name == 'Молочный' ~ 'ЛМ',
-                              department_name == 'Рыбный' ~ 'БР',
-                              department_name == 'Кулинария' ~ 'ЛК'), .after = code_1c_shop)
   
   return(df_sheck)
 }
