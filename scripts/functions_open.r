@@ -246,6 +246,7 @@ GROUP BY [pred_name],[pred_date]")
 
 get_df_check_structure <- function(start_date = '2022-06-01',
                                    end_date   = '2022-06-01',
+                                   dept_name  = 'Мясной',
                                    con_dalion_en) {
   
   request_code <- paste0("SELECT 
@@ -319,7 +320,7 @@ COUNT(distinct [guid_check]) AS n_sales
 
 FROM [dalion_en].[dbo].[sales]
 
-WHERE (([date] BETWEEN 'Repl_start_date' AND 'Repl_end_date'))
+WHERE (([date] BETWEEN 'Repl_start_date' AND 'Repl_end_date') AND ([department_name] = 'Repl_dept_name'))
 
 GROUP BY [date], [code_1c_shop], [department_name], [code_1c_nomenclature]
 
@@ -358,6 +359,7 @@ ORDER BY [code_1c_shop], [department_name], [sales] DESC, [date]")
   # date
   request_code <- gsub("Repl_start_date", start_date, request_code)
   request_code <- gsub("Repl_end_date",   end_date,   request_code)
+  request_code <- gsub("Repl_dept_name",  dept_name,   request_code)
 
   df_sheck <- dbGetQuery(con_dalion_en,request_code)
   
