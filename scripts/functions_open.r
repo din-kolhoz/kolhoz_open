@@ -365,3 +365,23 @@ ORDER BY [code_1c_shop], [department_name], [sales] DESC, [date]")
   
   return(df_sheck)
 }
+
+get_dalion_plans_sql <- function(con_analytics,
+                                 start_date = '2022-08-29',
+                                 end_date   = '2022-09-04') {
+  
+  request_code <- paste0("SELECT [date]
+      ,[code_1c_shop]
+      ,[department_name]
+      ,[sales_plan]
+  FROM [dalion_en].[dbo].[sales_planned]
+  WHERE [date] BETWEEN 'Repl_pred_date' AND 'Repl_pred_name'")
+  
+  request_code <- gsub("Repl_pred_date", start_date, request_code)
+  request_code <- gsub("Repl_pred_name", end_date,   request_code)
+  
+  df_pred           <- dbGetQuery(con_analytics,request_code)
+  df_pred$date      <- as.Date(df_pred$date)
+  
+  return(df_pred)
+}
