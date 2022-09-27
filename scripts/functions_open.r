@@ -430,8 +430,8 @@ SELECT [check_guid]
 
   LEFT JOIN (SELECT [check_guid]
                                ,(CASE
-							   WHEN [nomenclature_type] = 'Услуга' THEN 'Мойка'
-							   ELSE 'Кафе'
+							   WHEN [nomenclature_type] = 'Услуга' THEN 'Moika'
+							   ELSE 'Kafe'
 							   END) AS nomenclature_type
       ,[nomenclature_name]
       ,[number_sales_fact]
