@@ -385,3 +385,114 @@ get_dalion_plans_sql <- function(con_analytics,
   
   return(df_pred)
 }
+
+get_df_car_sales_sql <- function(con_car) {
+  
+  request_code <- paste0("SELECT [df_sales].[check_guid]
+,[df_sales].[dt_date]
+,[df_sales].[dt_year]
+,[df_sales].[dt_month]
+,[df_sales].[week_day]
+,[df_sales].[start_hour]
+,[df_sales].[end_hour]
+,[df_sales].[order_time_min]
+,[df_sales].[client_guid]
+,[df_sales].[client_name]
+,[df_sales].[kkm]
+,[ks]
+,[nomenclature_type]
+,[nomenclature_name]
+,[number_sales_fact]
+,[sales_amount_fact]
+,[car_name]
+,[car_model]
+,[car_category_name]
+,[n_days]
+,[client_period]
+
+FROM(
+
+SELECT [check_guid]
+	  , CAST(date_time as DATE)      as dt_date
+	  , DATEPART(YEAR, [date_time])  as dt_year
+	  , DATEPART(MONTH, [date_time]) as dt_month
+	  , DATEPART(WEEKDAY, [date_time])   as week_day
+	  , DATEPART(HOUR, [time_start]) as start_hour
+	  , DATEPART(HOUR, [time_end])   as end_hour
+	  , DATEDIFF(MINUTE, [time_start], [time_end]) as order_time_min
+	  	  
+      ,[client_guid]
+      ,[client_name]
+      ,[seller_name]
+      ,[kkm]
+	  ,[ks]
+  FROM [car_wash].[dbo].[sales]) AS df_sales
+
+  LEFT JOIN (SELECT [check_guid]
+                               ,(CASE
+							   WHEN [nomenclature_type] = 'Услуга' THEN 'Мойка'
+							   ELSE 'Кафе'
+							   END) AS nomenclature_type
+      ,[nomenclature_name]
+      ,[number_sales_fact]
+      ,[price_fact]
+      ,[sales_amount_fact]
+  FROM [car_wash].[dbo].[sales_goods]) AS df_goods
+ 
+ON (
+[df_sales].[check_guid] = [df_goods].[check_guid]
+)
+
+LEFT JOIN (SELECT [client_guid]
+      ,[client_name]
+      ,[car_name]
+      ,[car_model]
+      ,[car_category_name]
+  FROM [car_wash].[dbo].[clients]) AS df_client
+ON (
+[df_sales].[client_guid] = [df_client].[client_guid]
+)
+
+LEFT JOIN (SELECT  [check_guid], [n_days]
+
+,(case WHEN ([n_days] = -1) then 'кафе'
+       WHEN ([n_days] = -2) then 'новые'
+	   WHEN ([n_days] < 8 ) then 'раз в 1 неделю'
+	   WHEN ([n_days] < 15 ) then 'раз в 2 недели'
+	   WHEN ([n_days] < 32 ) then 'раз в месяц'
+	   WHEN ([n_days] < 94 ) then 'раз в квартал'
+	   ELSE 'разовые'
+	   END) as client_period
+
+FROM 
+(SELECT  [check_guid]
+
+,(case WHEN ([client_guid] = '3aa8ee80-dbc6-11ea-9bc1-005056a86321') then -1
+	  WHEN ([prev_date_time] IS NULL) then -2
+	  ELSE [n_days]
+	  END) as [n_days]
+
+FROM 
+(SELECT [check_guid]
+,[client_guid]
+,[date_time]
+,[prev_date_time]
+,DATEDIFF(DAY, [prev_date_time], [date_time]) as n_days
+
+FROM
+(SELECT [check_guid]
+,[client_guid]
+,[date_time]
+,LAG([date_time], 1) OVER (
+						PARTITION BY [client_guid]
+						ORDER BY [date_time]
+						) prev_date_time
+  FROM [car_wash].[dbo].[sales]) as df_clients1) as df_clients2) as df_clients3) AS df_client_period
+ON (
+[df_sales].[check_guid] = [df_client_period].[check_guid]
+)")
+
+df_car_sales_sql <- dbGetQuery(con_car,request_code)
+df_car_sales_sql$dt_date <- as.Date(df_car_sales_sql$dt_date)
+return(df_car_sales_sql)
+}
