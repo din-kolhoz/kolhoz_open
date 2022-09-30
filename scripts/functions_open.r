@@ -227,6 +227,9 @@ get_plans_sql <- function(con_analytics,
   df_pred$date      <- as.Date(df_pred$date)
   df_pred$pred_date <- as.Date(df_pred$pred_date)
   
+  df_pred <- df_pred %>%
+    mutate(version = paste0(pred_date,'_',pred_name))
+  
   return(df_pred)
 }
 
