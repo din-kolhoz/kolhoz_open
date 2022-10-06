@@ -499,3 +499,59 @@ df_car_sales_sql <- dbGetQuery(con_car,request_code)
 df_car_sales_sql$dt_date <- as.Date(df_car_sales_sql$dt_date)
 return(df_car_sales_sql)
 }
+
+get_position_distribution_sql <- function(con_dalion,
+                                 start_date = '2022-09-01',
+                                 end_date   = '2022-10-01') {
+  
+  request_code <- paste0("SELECT 
+[date],
+[code_1c_shop],
+[n_positions],
+ROUND(SUM([sales]),2) AS sales,
+ROUND(SUM([prime]),2) AS prime,
+ROUND(SUM([n_sales]),2) AS n_sales
+FROM(
+SELECT 
+[date],
+[guid_check],
+[code_1c_shop],
+ROUND(SUM([sales_amount_fact]),2) AS sales,
+ROUND(SUM([prime_cost]),2) AS prime,
+ROUND(SUM([number_sales_fact]),2) AS number,
+COUNT(distinct [guid_check]) AS n_sales,
+COUNT([guid_check]) AS n_positions
+FROM(
+SELECT [date],
+[code_1c_shop],
+[guid_check],
+[df_sales].[code_1c_nomenclature],
+[sales_amount_fact],
+[prime_cost],
+[number_sales_fact]
+FROM(SELECT [code_1c_nomenclature]
+  FROM [dalion_en].[dbo].[nomenclature]
+  WHERE [category_4] in ('Готовая еда от поставщика','Готовая еда СП')) AS df_food
+LEFT JOIN (SELECT 
+[date],
+[guid_check],
+[code_1c_nomenclature],
+[code_1c_shop],
+[sales_amount_fact],
+[prime_cost],
+[number_sales_fact]
+  FROM [dalion_en].[dbo].[sales]
+  WHERE [date] BETWEEN 'Repl_start_date' AND 'Repl_end_date') AS df_sales
+  ON [df_food].[code_1c_nomenclature] = [df_sales].[code_1c_nomenclature]) AS df_checks
+  GROUP BY [date],[guid_check],[code_1c_shop]) as df_checks_0
+  GROUP BY [date],[code_1c_shop],[n_positions]
+  ORDER BY [date],[code_1c_shop],[n_positions]")
+  
+  request_code <- gsub("Repl_start_date", start_date, request_code)
+  request_code <- gsub("Repl_end_date", end_date,   request_code)
+  
+  df_pred           <- dbGetQuery(con_dalion,request_code)
+  df_pred$date      <- as.Date(df_pred$date)
+  
+  return(df_pred)
+}
