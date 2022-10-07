@@ -559,7 +559,7 @@ LEFT JOIN (SELECT
 get_position_distribution_by_dept_sql <- function(con_dalion,
                                           start_date = '2022-09-01',
                                           end_date   = '2022-10-01',
-                                          dept_name = 'Кулинария') {
+                                          i_dept_name  = 'Кулинария') {
   
   request_code <- paste0("SELECT 
 [date],
@@ -605,7 +605,7 @@ LEFT JOIN (SELECT
   
   request_code <- gsub("Repl_start_date", start_date, request_code)
   request_code <- gsub("Repl_end_date",   end_date,   request_code)
-  request_code <- gsub("Repl_dept",       dept_name,   request_code)
+  request_code <- gsub("Repl_dept",       i_dept_name,   request_code)
   
   df_pred <- dbGetQuery(con_dalion,request_code)
   df_pred <- df_pred %>%
