@@ -558,7 +558,8 @@ LEFT JOIN (SELECT
 
 get_position_distribution_by_dept_sql <- function(con_dalion,
                                           start_date = '2022-09-01',
-                                          end_date   = '2022-10-01') {
+                                          end_date   = '2022-10-01',
+                                          dept_name = 'Кулинария') {
   
   request_code <- paste0("SELECT 
 [date],
