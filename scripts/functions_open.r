@@ -597,7 +597,7 @@ LEFT JOIN (SELECT
 [prime_cost],
 [number_sales_fact]
   FROM [dalion_en].[dbo].[sales]
-  WHERE [date] BETWEEN 'Repl_start_date' AND 'Repl_end_date' AND department_name= 'Repl_dept') AS df_sales
+  WHERE [date] BETWEEN 'Repl_start_date' AND 'Repl_end_date' AND [department_name] = 'Repl_dept') AS df_sales
   ON [df_food].[code_1c_nomenclature] = [df_sales].[code_1c_nomenclature]) AS df_checks
   GROUP BY [date],[guid_check],[code_1c_shop]) as df_checks_0
   GROUP BY [date],[code_1c_shop],[n_positions]
@@ -607,8 +607,11 @@ LEFT JOIN (SELECT
   request_code <- gsub("Repl_end_date",   end_date,   request_code)
   request_code <- gsub("Repl_dept",       dept_name,   request_code)
   
-  df_pred           <- dbGetQuery(con_dalion,request_code)
-  df_pred$date      <- as.Date(df_pred$date)
+  df_pred <- dbGetQuery(con_dalion,request_code)
+  df_pred <- df_pred %>%
+    filter(!is.na(n_positions)) %>%
+    filter(n_positions > 0)
+  df_pred$date <- as.Date(df_pred$date)
   
   return(df_pred)
 }
