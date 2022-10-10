@@ -460,11 +460,9 @@ LEFT JOIN (SELECT  [check_guid], [n_days]
 
 ,(case WHEN ([n_days] = -1) then 'кафе'
        WHEN ([n_days] = -2) then 'новые'
-	   WHEN ([n_days] < 8 ) then 'раз в 1 неделю'
-	   WHEN ([n_days] < 15 ) then 'раз в 2 недели'
-	   WHEN ([n_days] < 32 ) then 'раз в месяц'
-	   WHEN ([n_days] < 94 ) then 'раз в квартал'
-	   ELSE 'разовые'
+	   WHEN ([n_days] < 15 ) then 'до 14'
+	   WHEN ([n_days] < 61 ) then 'до 60'
+	   ELSE 'более 60'
 	   END) as client_period
 
 FROM 
