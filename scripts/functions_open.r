@@ -579,13 +579,14 @@ COUNT([guid_check]) AS n_positions
 FROM(
 SELECT [date],
 [code_1c_shop],
-[guid_check],
+df_food.[guid_check],
 [df_sales].[code_1c_nomenclature],
 [sales_amount_fact],
 [prime_cost],
 [number_sales_fact]
-FROM(SELECT [code_1c_nomenclature]
-  FROM [dalion_en].[dbo].[nomenclature]) AS df_food
+FROM(SELECT [guid_check]
+  FROM [dalion_en].[dbo].[sales]
+  WHERE [code_1c_nomenclature] = '31385' AND [date] BETWEEN 'Repl_start_date' AND 'Repl_end_date' AND [department_name] = 'Repl_dept') AS df_food
 LEFT JOIN (SELECT 
 [date],
 [guid_check],
@@ -595,8 +596,8 @@ LEFT JOIN (SELECT
 [prime_cost],
 [number_sales_fact]
   FROM [dalion_en].[dbo].[sales]
-  WHERE [date] BETWEEN 'Repl_start_date' AND 'Repl_end_date' AND [department_name] = 'Repl_dept') AS df_sales
-  ON [df_food].[code_1c_nomenclature] = [df_sales].[code_1c_nomenclature]) AS df_checks
+  ) AS df_sales
+  ON [df_food].[guid_check] = [df_sales].[guid_check]) AS df_checks
   GROUP BY [date],[guid_check],[code_1c_shop]) as df_checks_0
   GROUP BY [date],[code_1c_shop],[n_positions]
   ORDER BY [date],[code_1c_shop],[n_positions]")
